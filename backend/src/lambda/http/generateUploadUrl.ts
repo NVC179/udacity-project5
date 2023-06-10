@@ -8,8 +8,10 @@ import { cors, httpErrorHandler } from 'middy/middlewares'
 import { updateAttachmentTodo } from '../../helpers/todosAcess'
 import { getUploadUrl } from '../../helpers/attachmentUtils'
 import { getUserId } from '../utils'
+import { createLogger } from '../../utils/logger'
 
 const bucketName = process.env.ATTACHMENT_S3_BUCKET
+const logger = createLogger('todos')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -21,6 +23,7 @@ export const handler = middy(
 
     await updateAttachmentTodo(todoId, userId, attachmentUrl);
     const url: string = await getUploadUrl(todoId)
+    logger.info("Log url -" +url)
     return {
       statusCode: 201,
       headers: {

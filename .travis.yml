@@ -8,6 +8,7 @@ install:
 # Scripts to be run such as tests
 before_script:
   - echo "no tests"
+  - cd client
 
 script:
   - docker --version # print the version for logging

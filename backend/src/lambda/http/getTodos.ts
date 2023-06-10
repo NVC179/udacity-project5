@@ -3,8 +3,8 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
-import { getUserId } from '../utils'
-import { getAllTodosByUserId } from '../../helpers/todosAcess'
+import { encodeNextKey, getUserId, parseLimitParameter, parseNextKeyParameter } from '../utils'
+import { getAllTodos } from '../../helpers/todos'
 
 
 // import { getTodosForUser as getTodosForUser } from '../../businessLogic/todos'
@@ -14,7 +14,23 @@ import { getAllTodosByUserId } from '../../helpers/todosAcess'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     // Write your code here
-    const todos = await getAllTodosByUserId(getUserId(event))
+    let nextKey
+    let limit
+
+    try {
+      // Parse query parameters
+      nextKey = parseNextKeyParameter(event)
+      limit = parseLimitParameter(event) || 20
+    } catch (e) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'Invalid parameters'
+        })
+      }
+    }
+
+    const todos = await getAllTodos(getUserId(event), nextKey, limit)
     console.log("be " + JSON.stringify(todos))
 
     return {
@@ -24,7 +40,8 @@ export const handler = middy(
         'Access-Control-Allow-Credentials': true
       },
       body: JSON.stringify({
-        "items": todos
+        "items": todos.todoItems,
+        nextKey: encodeNextKey(todos.lastEvaluatedKey)
       })
     }
   })

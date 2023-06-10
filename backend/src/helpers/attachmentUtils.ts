@@ -5,7 +5,7 @@ const bucketName = process.env.ATTACHMENT_S3_BUCKET
 
 // // TODO: Implement the fileStogare logic
 
-const s3 = new XAWS.S3({
+const s3: AWS.S3 = new XAWS.S3({
     signatureVersion: 'v4'
 })
 
@@ -17,3 +17,11 @@ export function getUploadUrl(imageId: string) {
         Expires: 300
     })
 }
+
+export function getDownloadUrl(imageId: string): string {
+    return s3.getSignedUrl('getObject', {
+        Bucket: bucketName,
+        Key: imageId
+    })
+}
+

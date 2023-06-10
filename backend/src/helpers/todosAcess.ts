@@ -1,14 +1,16 @@
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
-import { DocumentClient } from 'aws-sdk/clients/dynamodb'
+import { DocumentClient, Key } from 'aws-sdk/clients/dynamodb'
 // import { createLogger } from '../utils/logger'
 // import { TodoItem } from '../models/TodoItem'
 // // import { TodoUpdate } from '../models/TodoUpdate';
 
-import { TodoItem } from "../models/TodoItem"
+import { PageableTodoItems, TodoItem } from "../models/TodoItem"
 import { TodoUpdate } from '../models/TodoUpdate'
+import { createLogger } from '../utils/logger'
 
 const XAWS = AWSXRay.captureAWS(AWS)
+const logger = createLogger('todos')
 
 // const logger = createLogger('TodosAccess')
 const todosTable = process.env.TODOS_TABLE
@@ -39,6 +41,23 @@ export async function getAllTodosByUserId(userId: string): Promise<TodoItem[]> {
 
 }
 
+export async function getAllTodosImpl(userId: string, nextKey: Key, limit: number): Promise < PageableTodoItems > {
+  const result = await docClient.query({
+    TableName: todosTable,
+    IndexName: index,
+    KeyConditionExpression: 'userId = :userId',
+    ExpressionAttributeValues: {
+      ':userId': userId
+    },
+    ScanIndexForward: false,
+    Limit: limit,
+    ExclusiveStartKey: nextKey
+  }).promise()
+
+  const items = result.Items as TodoItem[]
+  return { todoItems: items, lastEvaluatedKey: result.LastEvaluatedKey }
+}
+
 export async function getTodoById(todoId: string): Promise<TodoItem> {
   const result = await docClient.query({
     TableName: todosTable,
@@ -53,7 +72,8 @@ export async function getTodoById(todoId: string): Promise<TodoItem> {
   return null
 }
 
-export async function updateAttachmentTodo(todoId: string, userId: string, attachmentUrl: string ): Promise<TodoItem> {
+
+export async function updateAttachmentTodo(todoId: string, userId: string, attachmentUrl: string): Promise<TodoItem> {
   const result = await docClient.update({
     TableName: todosTable,
     Key: {
@@ -72,7 +92,7 @@ export async function updateTodo(todoId: string, userId: string, model: TodoUpda
   console.log('Update todo');
 
   const params = {
-    TableName: this.todosTable,
+    TableName: todosTable,
     Key: {
       todoId: todoId,
       userId: userId
@@ -93,7 +113,7 @@ export async function updateTodo(todoId: string, userId: string, model: TodoUpda
 }
 
 export async function deleteTodo(todoId: string, userId: string): Promise<any> {
-  console.log("Cuong delete");
+  logger.info('delete TODO item', userId, todoId)
   const params = {
     TableName: todosTable,
     Key: {
@@ -105,14 +125,19 @@ export async function deleteTodo(todoId: string, userId: string): Promise<any> {
 }
 
 
-function createDynamoDBClient() {
-  if (process.env.IS_OFFLINE) {
-    console.log('Creating a local DynamoDB instance')
-    return new XAWS.DynamoDB.DocumentClient({
-      region: 'localhost',
-      endpoint: 'http://localhost:8000'
-    })
-  }
+export async function updateAttachment(userId: string, todoId: string): Promise<void> {
+  await docClient.update({
+    TableName: todosTable,
+    Key: { userId, todoId },
+    UpdateExpression: "set attachmentUrl=:a",
+    ExpressionAttributeValues: {
+      ":a": todoId
+    },
+    ReturnValues: "NONE"
+  }).promise()
+}
 
+
+function createDynamoDBClient() {
   return new XAWS.DynamoDB.DocumentClient()
 }

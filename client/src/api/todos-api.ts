@@ -4,17 +4,35 @@ import { CreateTodoRequest } from '../types/CreateTodoRequest';
 import Axios from 'axios'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest';
 
-export async function getTodos(idToken: string): Promise<Todo[]> {
+interface PageableTodos {
+  todos: Todo[]
+  nextKey: string
+}
+
+export async function getTodos(idToken: string, limit = 1): Promise<PageableTodos> {
   console.log('Fetching todos')
 
-  const response = await Axios.get(`${apiEndpoint}/todos`, {
+  const response = await Axios.get(`${apiEndpoint}/todos?limit=${limit}`, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
     },
   })
   console.log('Todos:', response.data)
-  return response.data.items
+  return { todos: response.data.items, nextKey: response.data.nextKey }
+}
+
+export async function getMoreTodos(idToken: string, nextKey?: string, limit = 1): Promise<PageableTodos> {
+  console.log('Fetching todos')
+
+  const response = await Axios.get(`${apiEndpoint}/todos?limit=${limit}&nextKey=${nextKey}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    },
+  })
+  console.log('More Todos:', response.data)
+  return { todos: response.data.items, nextKey: response.data.nextKey }
 }
 
 export async function createTodo(
