@@ -242,7 +242,7 @@ resources:
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
-              - AttributeName: createdAt
+              - AttributeName: dueDate
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
