@@ -15,7 +15,7 @@ spec:
         app: todoapp-frontend
     spec:
       containers:
-      - name: todoapp-frontend
-        image: vietcuong179/todoapp-frontend
+      - name: nginx
+        image: public.ecr.aws/nginx/nginx
         ports:
         - containerPort: 8080
