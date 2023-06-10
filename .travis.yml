@@ -12,7 +12,7 @@ before_script:
 
 script:
   - docker --version # print the version for logging
-  - docker build -t todoapp-frontend .
+  - docker build -t todoapp-frontend
   - docker tag todoapp-frontend vietcuong179/todoapp-frontend:latest
 
 after_success:

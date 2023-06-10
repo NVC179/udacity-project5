@@ -1,4 +1,4 @@
-FROM node:13
+FROM node:14
 
 WORKDIR /usr/src/app
  
@@ -6,7 +6,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY . .
 
-RUN npm install
+RUN npm install -f
 
 RUN npm run build
 
