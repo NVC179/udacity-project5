@@ -18,4 +18,4 @@ script:
 after_success:
   - docker logout
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - docker push vietcuong179/todoapp-frontend
+  - docker push vietcuong179/todoapp-frontend:v1

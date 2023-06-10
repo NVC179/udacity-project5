@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: todoapp-frontend
-        image: vietcuong179/todoapp-frontend:laste
+        image: vietcuong179/todoapp-frontend:v1
         ports:
         - containerPort: 8080
